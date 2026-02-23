@@ -17,4 +17,9 @@ class ClientSite extends Model
         'montant',
         'statut'
     ];
+
+      public function hebergements()
+    {
+        return $this->hasMany(HebergementClient::class, 'client_site_id');
+    }
 }

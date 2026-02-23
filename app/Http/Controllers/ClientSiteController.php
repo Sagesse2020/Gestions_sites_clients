@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClientSite;
+use App\Models\HebergementClient;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -29,6 +30,11 @@ class ClientSiteController extends Controller
         }
 
         return view('client', compact('clients'));
+
+  // Récupère tous les clients avec leurs hébergements
+        $clients = ClientSite::with('hebergements')->get();
+
+        return view('hebergements.index', compact('clients'));
     }
 
     /**

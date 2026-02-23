@@ -82,6 +82,9 @@
         <p>Accédez au tableau de bord pour gérer vos clients et leurs sites hébergés.</p>
         <a href="{{ route('Client') }}" class="btn">Mes clients</a>
         <a href="{{ route('Create') }}" class="btn">Nouveau client</a>
+        <a href="{{ route('github.index') }}" class="btn">Github</a>
+        <a href="{{ route('hebergements.create') }}" class="btn">Nouvel Hebergements</a>
+        <a href="{{ route('hebergements.index') }}" class="btn">Hebergement</a>
     </main>
 
     <footer>

@@ -11,37 +11,37 @@ use Illuminate\Support\Facades\Mail;
 class Kernel extends ConsoleKernel
 {
     /**
-     * Définir les commandes Artisan.
+     * Les commandes Artisan disponibles.
      *
      * @var array
      */
     protected $commands = [
-        // Tu peux ajouter ici tes commandes personnalisées
+        // Tu peux ajouter tes commandes personnalisées ici
+        // 'App\Console\Commands\CheckHebergements',
     ];
 
     /**
-     * Définir le planning des tâches.
+     * Planification des tâches.
      *
      * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
     protected function schedule(Schedule $schedule)
     {
-        // Tâche quotidienne pour vérifier les renouvellements
+        // Vérification quotidienne des renouvellements
         $schedule->call(function () {
 
             $today = Carbon::today();
 
-            // Parcours tous les clients
             $clients = ClientSite::all();
 
             foreach ($clients as $client) {
 
                 $renouvellement = Carbon::parse($client->date_renouvellement);
 
-                // 15 jours avant la date de renouvellement
-                if ($today->diffInDays($renouvellement, false) === 15) {
-                    // Exemple : envoi d'email (tu dois créer une Mailable)
+                // Notifications 7 jours avant expiration (chaque jour)
+                $diffDays = $today->diffInDays($renouvellement, false);
+                if ($diffDays <= 7 && $diffDays >= 0) {
                     Mail::raw(
                         "Bonjour {$client->nom_client}, le renouvellement de votre site {$client->site_url} arrive à échéance le {$client->date_renouvellement}. Merci de procéder au paiement de {$client->montant} FCFA.",
                         function ($message) use ($client) {
@@ -51,23 +51,23 @@ class Kernel extends ConsoleKernel
                     );
                 }
 
-                // Mise à jour du statut
+                // Mise à jour du statut automatiquement
                 if ($today->greaterThan($renouvellement)) {
-                    $client->statut = 'Expiré';
-                } elseif ($today->diffInDays($renouvellement, false) <= 15) {
-                    $client->statut = 'À renouveler';
+                    $client->statut = 'expiré';
+                } elseif ($diffDays <= 7) {
+                    $client->statut = 'à renouveler';
                 } else {
-                    $client->statut = 'Actif';
+                    $client->statut = 'actif';
                 }
 
                 $client->save();
             }
 
-        })->daily(); // s'exécute tous les jours
+        })->dailyAt('08:00'); // exécute tous les jours à 8h
     }
 
     /**
-     * Enregistrer les commandes Artisan.
+     * Enregistrement des commandes Artisan.
      *
      * @return void
      */
