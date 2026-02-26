@@ -6,6 +6,7 @@ use App\Models\ClientSite;
 use App\Models\HebergementClient;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use GuzzleHttp\Client;
 
 class ClientSiteController extends Controller
 {
@@ -29,7 +30,7 @@ class ClientSiteController extends Controller
             }
         }
 
-        return view('client', compact('clients'));
+        return view('clients.index', compact('clients'));
 
   // Récupère tous les clients avec leurs hébergements
         $clients = ClientSite::with('hebergements')->get();
@@ -42,7 +43,7 @@ class ClientSiteController extends Controller
      */
     public function create()
     {
-        return view('create');
+        return view('clients.create');
     }
 
     /**
@@ -77,6 +78,28 @@ class ClientSiteController extends Controller
             'statut' => 'Actif',
         ]);
 
-        return redirect()->route('Client')->with('success', 'Client ajouté avec succès !');
+        return redirect()->route('clients.index')->with('success', 'Client ajouté avec succès !');
+    }
+
+
+    public function edit($id)
+    {
+        $clients = ClientSite::findOrFail($id);
+        $hebergements = HebergementClient::all();
+        return view('clients.edit', compact('clients', 'hebergements'));
+    }
+    public function update(Request $request, $id)
+    {
+         $clients  = ClientSite::findOrFail($id);
+         $clients ->update($request->all());
+        return redirect()->route('clients.index');
+    }
+
+     public function destroy($id)
+    {
+        $clients = ClientSite::findOrFail($id);
+        $clients->delete();
+
+        return redirect()->route('clients.index')->with('success', 'Client supprimé avec succès.');
     }
 }

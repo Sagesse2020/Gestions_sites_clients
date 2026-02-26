@@ -89,24 +89,43 @@ class HebergementClientController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(HebergementClient $hebergementClient)
+    public function edit($id)
     {
-        //
+
+    $hebergement = HebergementClient::findOrFail($id);
+    return view('hebergements.edit', compact('hebergement'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, HebergementClient $hebergementClient)
+    public function update(Request $request,$id)
     {
-        //
+        $hebergement = HebergementClient::findOrFail($id);
+
+    $request->validate([
+        'domaine' => 'required|string|max:255',
+        'date_debut' => 'required|date',
+        'date_fin' => 'required|date|after_or_equal:date_debut',
+        'montant' => 'required|numeric',
+        'statut' => 'required|in:actif,suspendu,expiré',
+    ]);
+
+    $hebergement->update($request->only([
+        'domaine', 'date_debut', 'date_fin', 'montant', 'statut'
+    ]));
+
+    return redirect()->route('hebergements.index')->with('success', 'Hébergement modifié avec succès');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(HebergementClient $hebergementClient)
+    public function destroy($id)
     {
-        //
+       $hebergements = hebergementClient::findOrFail($id);
+       $hebergements->delete();
+
+        return redirect()->route('hebergements.index')->with('success', 'Client supprimé avec succès.');
     }
 }

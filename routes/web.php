@@ -9,22 +9,18 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/client', [ClientSiteController::class, 'index'])->name('Client');
-Route::get('/Createclient', [ClientSiteController::class, 'create'])->name('Create');
-Route::post('/Createclient', [ClientSiteController::class, 'store'])->name('Store');
+Route::get('/app', function () {
+    return view('layouts.app');
+});
+
 Route::get('/github', [GitHubController::class, 'index'])->name('github.index');
-// Page d'accueil du tableau de bord hébergements
-Route::get('/hebergements', [HebergementClientController::class, 'index'])->name('hebergements.index');
+Route::resource('clients', ClientSiteController::class);
+Route::resource('hebergements', HebergementClientController::class);
+Route::post('hebergements/{id}/toggle', [HebergementClientController::class, 'toggleStatut'])
+    ->name('hebergements.toggle');
 
-// Formulaire pour créer un nouvel hébergement
-Route::get('/hebergements/create', [HebergementClientController::class, 'create'])->name('hebergements.create');
-
-// Stocker un nouvel hébergement
-Route::post('/hebergements/store', [HebergementClientController::class, 'store'])->name('hebergements.store');
-
-// Bouton pour suspendre / réactiver un hébergement
-Route::post('/hebergements/toggle/{id}', [HebergementClientController::class, 'toggleStatut'])->name('hebergements.toggle');
+// Email d'expiration de l'hebergement
 route::get('/expirationHebergement', function() {
-    return view('emaails.expiration_alerte');
+    return view('emails.expiration_alerte');
 });
 
