@@ -6,52 +6,38 @@ use App\Models\ClientSite;
 use App\Models\HebergementClient;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
-use GuzzleHttp\Client;
 
 class ClientSiteController extends Controller
 {
-    /**
-     * Affiche la liste des clients.
-     */
     public function index()
     {
         $clients = ClientSite::all();
 
-        // Met à jour les statuts automatiquement
         foreach ($clients as $client) {
-            $daysLeft = Carbon::now()->diffInDays(Carbon::parse($client->date_renouvellement), false);
+            $today = Carbon::today();
+            $renewal = Carbon::parse($client->date_renouvellement);
 
-            if ($daysLeft <= 0) {
-                $client->update(['statut' => 'Expiré']);
-            } elseif ($daysLeft <= 15) {
-                $client->update(['statut' => 'Bientôt à renouveler']);
+            if ($renewal->lt($today)) {
+                $client->statut = 'expire';
+            } elseif ($renewal->diffInDays($today) <= 15) {
+                $client->statut = 'bientot';
             } else {
-                $client->update(['statut' => 'Actif']);
+                $client->statut = 'actif';
             }
+
+            $client->save();
         }
 
         return view('clients.index', compact('clients'));
-
-  // Récupère tous les clients avec leurs hébergements
-        $clients = ClientSite::with('hebergements')->get();
-
-        return view('hebergements.index', compact('clients'));
     }
 
-    /**
-     * Affiche la vue de création d’un client.
-     */
     public function create()
     {
         return view('clients.create');
     }
 
-    /**
-     * Enregistre un nouveau client dans la base de données.
-     */
     public function store(Request $request)
     {
-        // Validation des champs
         $request->validate([
             'nom_client' => 'required|string|max:255',
             'email' => 'required|email|max:255',
@@ -61,13 +47,11 @@ class ClientSiteController extends Controller
             'montant' => 'required|integer',
         ]);
 
-        // Correction automatique de l’URL
         $url = $request->site_url;
         if (!preg_match('/^https?:\/\//', $url)) {
             $url = 'https://' . $url;
         }
 
-        // Enregistrement du client
         ClientSite::create([
             'nom_client' => $request->nom_client,
             'email' => $request->email,
@@ -75,12 +59,11 @@ class ClientSiteController extends Controller
             'date_creation' => $request->date_creation,
             'date_renouvellement' => $request->date_renouvellement,
             'montant' => $request->montant,
-            'statut' => 'Actif',
+            'statut' => 'actif',
         ]);
 
-        return redirect()->route('clients.index')->with('success', 'Client ajouté avec succès !');
+        return redirect()->route('clients.index')->with('success', 'Client ajouté avec succès');
     }
-
 
     public function edit($id)
     {
@@ -88,18 +71,17 @@ class ClientSiteController extends Controller
         $hebergements = HebergementClient::all();
         return view('clients.edit', compact('clients', 'hebergements'));
     }
+
     public function update(Request $request, $id)
     {
-         $clients  = ClientSite::findOrFail($id);
-         $clients ->update($request->all());
+        $client = ClientSite::findOrFail($id);
+        $client->update($request->all());
         return redirect()->route('clients.index');
     }
 
-     public function destroy($id)
+    public function destroy($id)
     {
-        $clients = ClientSite::findOrFail($id);
-        $clients->delete();
-
-        return redirect()->route('clients.index')->with('success', 'Client supprimé avec succès.');
+        ClientSite::findOrFail($id)->delete();
+        return redirect()->route('clients.index')->with('success', 'Client supprimé');
     }
 }
